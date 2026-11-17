@@ -16,7 +16,8 @@ role has been changed by this implementation.
 | Web portable build, consumer interactions, tests and dependency audit | [Core CI](https://github.com/msft-contoso-university/contoso-web/actions/runs/44143080591) | Candidate `38b43796784628ac72d8977b5097ec8d21f9f633`; APIs/identity not cloud-integrated |
 | Academics actual SQL HTTP responses pass both mapped consumers | [Cross-repo CI](https://github.com/msft-contoso-university/contoso-academics/actions/runs/44149549431) | Same-run artifacts; pinned Web and Enrollments parsing; no live service calls |
 | Enrollments actual SQL HTTP responses pass Web | [Cross-repo CI](https://github.com/msft-contoso-university/contoso-enrollments/actions/runs/44149555454) | Same-run artifacts; pinned consumer; no cloud integration claim |
-| Students compatibility defect blocks aggregate despite passing producer tests and CodeQL | [Negative real gate](https://github.com/msft-contoso-university/contoso-students/actions/runs/44149698073) | Default enrollment date rejected by Web; producer fix pending, not a harness bypass |
+| Students compatibility defect blocks aggregate despite passing producer tests and CodeQL | [Negative real gate](https://github.com/msft-contoso-university/contoso-students/actions/runs/44149698073) | Default enrollment date rejected by Web; retained as genuine negative evidence |
+| Students producer invariant fixes the defect without changing frozen consumers | [Red-to-green CI](https://github.com/msft-contoso-university/contoso-students/actions/runs/44151844775) | Required dates, UTC responses, dirty-data migration refusal; original Web/Enrollments checks pass |
 
 These are historical runs bound to their exact commits. A later source or
 workflow change needs its own current checks. PR CI may analyze a synthetic
@@ -83,7 +84,12 @@ date became `0001-01-01T00:00:00`, which the Web client correctly rejected even
 though producer unit tests and static analysis passed. The aggregate blocked the
 candidate. The supported fix is an explicit producer date invariant with a
 regression test, not removal of the consumer check or substitution of the bad
-sample. The green fix run must be linked before claiming this defect resolved.
+sample. [The fix run](https://github.com/msft-contoso-university/contoso-students/actions/runs/44151844775)
+passes both original frozen consumers after requiring nondefault dates, emitting
+UTC-designated responses and adding the SQL constraint. Its regression tests also
+exercise dirty-data migration refusal: no stored date is silently fabricated.
+The separate PR run remains blocked on unaccepted human intent; green push CI is
+not review approval.
 
 These are offline payload checks. Local stubs, contract fixtures and SQL Server
 containers are not evidence of private Azure connectivity or distributed traces.
