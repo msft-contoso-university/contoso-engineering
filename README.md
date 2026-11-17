@@ -20,6 +20,9 @@ execute untrusted PR code in a privileged context.
 Engineering's own PR story check loads policy from the trusted base commit,
 separate from candidate-code unit tests. `Required checks` rejects a skipped
 story check on PRs. Policy/workflow changes have explicit code ownership.
+PR description edits re-run the gate. If a linked issue or its acceptance
+changes afterward, re-run the checks before review/merge: a completed CI run
+is evidence for the issue state it observed, not a continuous authorization.
 
 ## Agentic workflows
 
