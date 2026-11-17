@@ -1,0 +1,54 @@
+name: ADLC user story
+description: Define an outcome before asking an agent to implement it
+title: "[Story] "
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      description: As a role, I want a capability, so that a benefit is achieved.
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: State the observable outcome, not just implementation tasks.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Explicitly identify what is in and out of scope.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use Markdown task-list items. Include normal and failure behavior.
+      placeholder: "- [ ] Given ..., when ..., then ..."
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: Name the required unit, contract, integration, or end-to-end checks.
+    validations:
+      required: true
+  - type: textarea
+    id: repositories
+    attributes:
+      label: Affected repositories
+      description: List full msft-contoso-university/contoso-* repository names.
+    validations:
+      required: true
+  - type: textarea
+    id: risk
+    attributes:
+      label: Risk and rollback
+      description: Identify risk, approvals, and the recovery or rollback procedure.
+    validations:
+      required: true

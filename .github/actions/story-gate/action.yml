@@ -1,0 +1,24 @@
+name: Accepted story gate
+description: Require structured stories accepted by a human repository writer
+inputs:
+  github-token:
+    description: Read-only token for linked issues and acceptance audit events
+    required: true
+  pull-request:
+    description: Pull request number
+    required: true
+    default: ${{ github.event.pull_request.number }}
+runs:
+  using: composite
+  steps:
+    - name: Validate linked intent and human acceptance
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        STORY_ACTION_PATH: ${{ github.action_path }}
+        CALLER_REPOSITORY: ${{ github.repository }}
+        PR_NUMBER: ${{ inputs.pull-request }}
+      run: |
+        set -euo pipefail
+        python3 "$STORY_ACTION_PATH/../../../tools/governance.py" check-pr \
+          --repository "$CALLER_REPOSITORY" --number "$PR_NUMBER"

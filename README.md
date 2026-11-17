@@ -1,8 +1,36 @@
 # Contoso engineering
 
-This repository will contain the shared, reviewed controls for the Contoso
-ADLC demonstration. The environment and its agentic workflows are **not yet
-operational**.
+This repository contains shared controls for the Contoso ADLC demonstration.
+The complete Azure environment is **not yet operational**. See
+`docs/constitution.md` for the authority boundaries.
+
+## Accepted intent
+
+Use the ADLC user story issue form. Triage can suggest clarification, but only
+a human repository writer may add `ready-for-agent`. PRs link 1-4 accepted
+stories on separate `Closes #123` lines (full `owner/repo#123` and canonical
+GitHub issue URLs are also supported). The deterministic story gate checks
+structure, the label audit actor, and that actor's current write permission.
+It does not prove semantic quality or a human credential's exclusive control.
+
+Application CI can consume `.github/actions/story-gate` at a reviewed full
+commit SHA with an explicit read-only `github-token` input. Grant caller jobs
+`contents: read`, `issues: read`, and `pull-requests: read`; do not check out or
+execute untrusted PR code in a privileged context.
+
+## Agentic workflows
+
+`issue-triage.md` requests bounded clarification/comments and advisory labels.
+`acceptance-review.md` requests COMMENT-only acceptance/impact reviews, distinct
+from Copilot implementation review. Neither can accept a story, approve a PR,
+dispatch a deployment, or merge.
+
+The pinned Linux compiler in `compile-agentic.yml` generates locks and rejects
+uncommitted generated output. Bootstrap compilation may fail this final check
+until its real `agentic-locks` artifact is reviewed and committed; do not handwrite
+locks or weaken the check. Runtime inference uses `copilot-requests: write` and
+requires organization billing/entitlement. Compilation is not a successful AI
+run. Missing entitlement is pending setup, not an operational workflow.
 
 The [source baseline](docs/baseline.md) records initial static observations and
 explicitly identifies characterization work still required.

@@ -1,0 +1,50 @@
+name: Compile agentic workflows
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/*.md
+      - .github/workflows/*.lock.yml
+      - .github/workflows/compile-agentic.yml
+  pull_request:
+    paths:
+      - .github/workflows/*.md
+      - .github/workflows/*.lock.yml
+      - .github/workflows/compile-agentic.yml
+permissions:
+  contents: read
+jobs:
+  compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_AW_VERSION: v0.79.8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned compiler
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh extension install github/gh-aw --pin "$GH_AW_VERSION"
+      - name: Compile strict agentic workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh aw compile --strict
+      - name: Preserve generated locks
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: agentic-locks
+          path: .github/workflows/*.lock.yml
+          if-no-files-found: error
+          retention-days: 7
+      - name: Require committed generated output
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain -- .github/workflows)" || {
+            echo "::error::Compiled locks differ. Download agentic-locks, review, and commit with sources."
+            git diff --stat -- .github/workflows
+            exit 1
+          }
