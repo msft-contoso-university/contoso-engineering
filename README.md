@@ -2,7 +2,8 @@
 
 This repository contains shared controls for the Contoso ADLC demonstration.
 The complete Azure environment is **not yet operational**. See
-`docs/constitution.md` for the authority boundaries.
+`docs/constitution.md` for the authority boundaries and
+[the evidence index](docs/evidence.md) for measured outcomes and remaining gates.
 
 ## Accepted intent
 
@@ -44,6 +45,12 @@ until its real `agentic-locks` artifact is reviewed and committed; do not handwr
 locks or weaken the check. Runtime inference uses `copilot-requests: write` and
 requires organization billing/entitlement. Compilation is not a successful AI
 run. Missing entitlement is pending setup, not an operational workflow.
+
+The actual triage attempt reached its inference provider and received HTTP 403;
+the precise authorization cause is unresolved. All three inference workflows
+are now natively paused (`disabled_manually`) to prevent automatic retries.
+Do not re-enable or rerun them until valid provider authorization is established.
+Compilation, deterministic CI and code scanning remain separate and enabled.
 
 The compiler also emits optional `agentics-maintenance.yml`; this repository
 does not install that autonomous maintenance workflow. CI verifies every new
