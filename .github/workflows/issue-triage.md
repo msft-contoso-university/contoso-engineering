@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
   issues: read
-  copilot-requests: write
+  copilot-requests: none
 engine: copilot
 tools:
   github:

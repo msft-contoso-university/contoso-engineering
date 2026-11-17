@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "status": "candidate-only-not-release",
+  "consumers": {
+    "contoso-web": {
+      "commit": "6e9f1700639e8e24e9cca5e6b12530c932b0078e",
+      "project": "tests/Contoso.Web.Tests/Contoso.Web.Tests.csproj"
+    },
+    "contoso-enrollments": {
+      "commit": "9563d9feb8d6ef1e46b8057c89c4223e277de486",
+      "project": "tests/Contoso.Enrollments.Tests/Contoso.Enrollments.Tests.csproj"
+    }
+  }
+}

@@ -42,9 +42,49 @@ bidirectional updates still require a separately scoped GitHub App.
 The pinned Linux compiler in `compile-agentic.yml` generates locks and rejects
 uncommitted generated output. Bootstrap compilation may fail this final check
 until its real `agentic-locks` artifact is reviewed and committed; do not handwrite
-locks or weaken the check. Runtime inference uses `copilot-requests: write` and
-requires organization billing/entitlement. Compilation is not a successful AI
-run. Missing entitlement is pending setup, not an operational workflow.
+locks or weaken the check. Runtime inference explicitly uses personal/seat
+billing (`copilot-requests: none`), not organization-billed Actions tokens.
+Compilation is not a successful AI run. Missing credentials or entitlement
+remain pending setup, not an operational workflow.
+
+### Personal Copilot inference
+
+The maintainer must supply a fine-grained PAT owned by their own Copilot-enabled
+user account, not the organization. Under **Account permissions**, grant only
+**Copilot Requests: Read**. Do not grant repository permissions for inference.
+Choose a short expiration appropriate for the disposable demonstration.
+
+Create it in [GitHub personal token settings](https://github.com/settings/personal-access-tokens/new?name=COPILOT_GITHUB_TOKEN&description=GitHub+Agentic+Workflows+-+Copilot+engine+authentication&user_copilot_requests=read)
+and store it directly as the organization Actions secret
+[`COPILOT_GITHUB_TOKEN`](https://github.com/organizations/msft-contoso-university/settings/secrets/actions).
+For a new secret, use **Selected repositories** and allow
+`contoso-engineering`, where these inference workflows run. Add another
+repository only when it needs inference. Do not remove unrelated consumers
+from an existing shared secret without reviewing their dependencies.
+Never paste its value into an issue, chat, source file, log, or command argument.
+The maintainer must complete token creation and secret entry; agents do not
+retrieve existing CLI credentials or handle the token.
+
+An allowed repository inherits the organization secret through the same
+`secrets.COPILOT_GITHUB_TOKEN` reference; no value needs to be copied into a
+repository secret. A repository-local secret with that name overrides the
+organization value. A repository-only secret listing does not show inherited
+organization secrets, so an empty listing alone does not establish that the
+workflow lacks a credential.
+
+An active personal Copilot entitlement is required; usage belongs to that
+account's allowance and billing limits, even when the secret is stored by the
+organization. GitHub App and OAuth user-session tokens
+are not supported for this inference secret. Adding the secret without removing
+`copilot-requests: write` would leave organization billing active and ignore it.
+
+The compiler binds the PAT only to Copilot inference. GitHub tools and safe
+outputs retain their separate least-privilege Actions credentials. Do not add
+repository access to the inference PAT to repair cross-repository tools; review
+any separately required GitHub App/read credential independently. Keep the
+three workflows paused until the generated locks are committed, native
+checks pass, and the secret is present. Then authorize one bounded pilot;
+do not enable all event triggers or claim working inference from compilation.
 
 The actual triage attempt reached its inference provider and received HTTP 403;
 the precise authorization cause is unresolved. All three inference workflows
@@ -72,11 +112,26 @@ python tools\contract_impact.py --repository contoso-students --changed-file con
 python -m unittest discover -s tests -v
 ```
 
-The selector only identifies required tests; it does not execute them or
-approve a change. Consumer test identifiers, contract paths and their CI
-integration must be implemented and verified in each application repository
-before this can serve as a release gate. Unknown contract files fail closed.
-Changes to this mapping require review by the relevant producer and consumers.
+The selector alone does not execute tests or approve a change.
+`tools/consumer_checks.py` plans all mapped consumers on every producer check,
+including implementation-only response changes. It rejects missing/unmapped
+contracts and mutable or absent consumer pins. `contracts/consumer-candidates.json`
+pins the current **unapproved candidates**, not production releases.
+
+The read-only reusable consumer workflow downloads actual HTTP JSON samples
+from the calling producer's exact run, SHA and attempt, then tests the pinned
+consumer's real parsing/mapping code. Tests reject breaking required fields,
+missing sample categories and malformed inputs; they do not merely validate old
+fixtures against a permissive new schema. The result gate requires nonzero
+passing TRX cases with no skipped/failed tests. This is offline payload
+compatibility, not proof of live Entra, private routing or distributed behavior.
+
+Call the reusable workflow at a full reviewed SHA after successful producer SQL
+tests have uploaded `producer-response-samples-<sha>-<attempt>`; include the
+caller's resulting job in its always-running aggregate. No inherited secrets,
+Azure access, repository writes, model requests or cross-repo dispatch token are
+needed. Candidate checks cannot authorize promotion. Changes to the mapping
+and consumer pins require producer/consumer review.
 
 ## Authority boundaries
 

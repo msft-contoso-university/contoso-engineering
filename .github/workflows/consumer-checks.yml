@@ -1,0 +1,126 @@
+name: Candidate consumer compatibility
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  # Freeze planner, mapping and consumer pins independently of caller code.
+  CONTROL_COMMIT: 283de6f97514731de393b779e77fad4f8494ff5e
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: msft-contoso-university/contoso-engineering
+          ref: ${{ env.CONTROL_COMMIT }}
+          path: policy
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          path: producer
+          persist-credentials: false
+      - name: Require mapped producer and complete immutable consumer pins
+        id: select
+        run: |
+          set -euo pipefail
+          python3 policy/tools/consumer_checks.py plan \
+            --repository "$GITHUB_REPOSITORY" --producer-root "$GITHUB_WORKSPACE/producer" \
+            > "$RUNNER_TEMP/consumer-matrix.json"
+          echo "matrix=$(cat "$RUNNER_TEMP/consumer-matrix.json")" >> "$GITHUB_OUTPUT"
+
+  consumer:
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    name: ${{ matrix.repository }} response compatibility
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CONSUMER_COMMIT: ${{ matrix.commit }}
+      CONSUMER_PROJECT: ${{ matrix.project }}
+      CONSUMER_REPOSITORY: ${{ matrix.repository }}
+      SAMPLE_ARTIFACT: producer-response-samples-${{ github.sha }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: msft-contoso-university/contoso-engineering
+          ref: ${{ env.CONTROL_COMMIT }}
+          path: policy
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.commit }}
+          path: consumer
+          persist-credentials: false
+      - name: Verify the selected consumer source
+        run: test "$(git -C consumer rev-parse HEAD)" = "$CONSUMER_COMMIT"
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: 10.0.404
+      - name: Download JSON evidence only from this producer run and attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name "$SAMPLE_ARTIFACT" --dir "$RUNNER_TEMP/producer-samples"
+      - name: Exercise actual consumer code against current producer responses
+        working-directory: consumer
+        env:
+          CONTOSO_CONSUMER_SAMPLES: ${{ runner.temp }}/producer-samples
+        run: |
+          set -euo pipefail
+          export CONTOSO_CONSUMER_PRODUCER="${GITHUB_REPOSITORY#*/}"
+          dotnet restore "$CONSUMER_PROJECT" --locked-mode
+          dotnet test "$CONSUMER_PROJECT" --configuration Release --no-restore \
+            --filter TestCategory=ConsumerCompatibility --logger trx \
+            --results-directory "$RUNNER_TEMP/consumer-results"
+      - name: Reject zero tests, missing evidence, failures or skipped cases
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          python3 policy/tools/consumer_checks.py verify-results \
+            --directory "$RUNNER_TEMP/consumer-results" > artifacts/compatibility.json
+          python3 - <<'PY'
+          import json, os, pathlib
+          path = pathlib.Path("artifacts/compatibility.json")
+          report = json.loads(path.read_text())
+          report.update({
+              "status": "candidate payload compatibility only; not release approval",
+              "producer": os.environ["GITHUB_REPOSITORY"],
+              "producerCommit": os.environ["GITHUB_SHA"],
+              "runId": os.environ["GITHUB_RUN_ID"],
+              "runAttempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "consumer": os.environ["CONSUMER_REPOSITORY"],
+              "consumerCommit": os.environ["CONSUMER_COMMIT"],
+              "policyCommit": os.environ["CONTROL_COMMIT"],
+          })
+          path.write_text(json.dumps(report, indent=2) + "\n")
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: compatibility-${{ strategy.job-index }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            artifacts/compatibility.json
+            ${{ runner.temp }}/consumer-results
+          if-no-files-found: error
+          retention-days: 7
