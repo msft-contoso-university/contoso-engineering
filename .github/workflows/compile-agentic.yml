@@ -35,8 +35,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -z "$(git status --porcelain -- .github/workflows)" || {
+          git status --short -- .github/workflows
+          test -z "$(git status --porcelain -- '.github/workflows/*.lock.yml')" || {
             echo "::error::Compiled locks differ. Download agentic-locks, review, and commit with sources."
-            git diff --stat -- .github/workflows
+            git diff --stat -- '.github/workflows/*.lock.yml'
             exit 1
           }

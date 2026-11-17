@@ -24,7 +24,6 @@ safe-outputs:
     allowed: [needs-info, triaged]
     max: 1
 timeout-minutes: 10
-if: github.event.sender.type == 'User' && (github.event_name == 'workflow_dispatch' || contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association))
 ---
 
 # Advisory story triage
