@@ -54,14 +54,26 @@ user account, not the organization. Under **Account permissions**, grant only
 Choose a short expiration appropriate for the disposable demonstration.
 
 Create it in [GitHub personal token settings](https://github.com/settings/personal-access-tokens/new?name=COPILOT_GITHUB_TOKEN&description=GitHub+Agentic+Workflows+-+Copilot+engine+authentication&user_copilot_requests=read)
-and store it directly as the repository Actions secret
-[`COPILOT_GITHUB_TOKEN`](https://github.com/msft-contoso-university/contoso-engineering/settings/secrets/actions).
+and store it directly as the organization Actions secret
+[`COPILOT_GITHUB_TOKEN`](https://github.com/organizations/msft-contoso-university/settings/secrets/actions).
+For a new secret, use **Selected repositories** and allow
+`contoso-engineering`, where these inference workflows run. Add another
+repository only when it needs inference. Do not remove unrelated consumers
+from an existing shared secret without reviewing their dependencies.
 Never paste its value into an issue, chat, source file, log, or command argument.
 The maintainer must complete token creation and secret entry; agents do not
 retrieve existing CLI credentials or handle the token.
 
+An allowed repository inherits the organization secret through the same
+`secrets.COPILOT_GITHUB_TOKEN` reference; no value needs to be copied into a
+repository secret. A repository-local secret with that name overrides the
+organization value. A repository-only secret listing does not show inherited
+organization secrets, so an empty listing alone does not establish that the
+workflow lacks a credential.
+
 An active personal Copilot entitlement is required; usage belongs to that
-account's allowance and billing limits. GitHub App and OAuth user-session tokens
+account's allowance and billing limits, even when the secret is stored by the
+organization. GitHub App and OAuth user-session tokens
 are not supported for this inference secret. Adding the secret without removing
 `copilot-requests: write` would leave organization billing active and ignore it.
 
