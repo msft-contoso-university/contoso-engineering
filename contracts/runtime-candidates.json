@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "status": "candidate-only-not-release",
+  "services": {
+    "web": "86d5e41eb8ad4b8ddd75d48243bbfa40c1651ae7",
+    "students": "ede5fa1d543a27a5e52b88d601dd922d56bf33f2",
+    "academics": "a7e1da9b950958ad4b3174a2d769aa5a62a847d7",
+    "enrollments": "c045ab186e6bddd084584620c3f81594080bfcf8"
+  }
+}
