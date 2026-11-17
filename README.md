@@ -41,9 +41,49 @@ bidirectional updates still require a separately scoped GitHub App.
 The pinned Linux compiler in `compile-agentic.yml` generates locks and rejects
 uncommitted generated output. Bootstrap compilation may fail this final check
 until its real `agentic-locks` artifact is reviewed and committed; do not handwrite
-locks or weaken the check. Runtime inference uses `copilot-requests: write` and
-requires organization billing/entitlement. Compilation is not a successful AI
-run. Missing entitlement is pending setup, not an operational workflow.
+locks or weaken the check. Runtime inference explicitly uses personal/seat
+billing (`copilot-requests: none`), not organization-billed Actions tokens.
+Compilation is not a successful AI run. Missing credentials or entitlement
+remain pending setup, not an operational workflow.
+
+### Personal Copilot inference
+
+The maintainer must supply a fine-grained PAT owned by their own Copilot-enabled
+user account, not the organization. Under **Account permissions**, grant only
+**Copilot Requests: Read**. Do not grant repository permissions for inference.
+Choose a short expiration appropriate for the disposable demonstration.
+
+Create it in [GitHub personal token settings](https://github.com/settings/personal-access-tokens/new?name=COPILOT_GITHUB_TOKEN&description=GitHub+Agentic+Workflows+-+Copilot+engine+authentication&user_copilot_requests=read)
+and store it directly as the organization Actions secret
+[`COPILOT_GITHUB_TOKEN`](https://github.com/organizations/msft-contoso-university/settings/secrets/actions).
+For a new secret, use **Selected repositories** and allow
+`contoso-engineering`, where these inference workflows run. Add another
+repository only when it needs inference. Do not remove unrelated consumers
+from an existing shared secret without reviewing their dependencies.
+Never paste its value into an issue, chat, source file, log, or command argument.
+The maintainer must complete token creation and secret entry; agents do not
+retrieve existing CLI credentials or handle the token.
+
+An allowed repository inherits the organization secret through the same
+`secrets.COPILOT_GITHUB_TOKEN` reference; no value needs to be copied into a
+repository secret. A repository-local secret with that name overrides the
+organization value. A repository-only secret listing does not show inherited
+organization secrets, so an empty listing alone does not establish that the
+workflow lacks a credential.
+
+An active personal Copilot entitlement is required; usage belongs to that
+account's allowance and billing limits, even when the secret is stored by the
+organization. GitHub App and OAuth user-session tokens
+are not supported for this inference secret. Adding the secret without removing
+`copilot-requests: write` would leave organization billing active and ignore it.
+
+The compiler binds the PAT only to Copilot inference. GitHub tools and safe
+outputs retain their separate least-privilege Actions credentials. Do not add
+repository access to the inference PAT to repair cross-repository tools; review
+any separately required GitHub App/read credential independently. Keep the
+three workflows paused until the generated locks are committed, native
+checks pass, and the secret is present. Then authorize one bounded pilot;
+do not enable all event triggers or claim working inference from compilation.
 
 The compiler also emits optional `agentics-maintenance.yml`; this repository
 does not install that autonomous maintenance workflow. CI verifies every new
