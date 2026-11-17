@@ -1,15 +1,17 @@
 # ADLC evidence index
 
 This is an implementation checkpoint, **not an operational-environment claim**.
-All application changes below remain unmerged candidates. No Azure resource or
-role has been changed by this implementation.
+Platform preflight, Web, Academics, Enrollments, shared compatibility controls,
+personal-Copilot configuration and the runtime suite have reached protected
+`main`. Students' initial PR is tracked below. No Azure resource or role has
+been changed by this implementation; provisioning and teardown remain guarded.
 
 ## What has actually run
 
 | Outcome | Evidence | Boundary |
 | --- | --- | --- |
 | Deterministic intent gate rejects incomplete stories even when code checks pass | [Negative draft PR](https://github.com/msft-contoso-university/contoso-engineering/pull/2) | Deliberately incomplete; do not merge or accept its story |
-| Real GitHub Agentic Workflow reaches inference | [Triage run](https://github.com/msft-contoso-university/contoso-engineering/actions/runs/44133251141) | HTTP 403; not a successful triage or AI loop |
+| Real GitHub Agentic Workflow reaches inference | [Triage run](https://github.com/msft-contoso-university/contoso-engineering/actions/runs/44133251141) | Initial execution returned HTTP 403; later native retry/cancel state is inconsistent, not successful triage or an AI loop |
 | Students migrations and synthetic seed CLI execute against SQL Server | [SQL CI](https://github.com/msft-contoso-university/contoso-students/actions/runs/44142728540) | Candidate `201002068640b22ef0defe2312629e9725d4d287`; not Azure SQL |
 | Academics SQL-backed HTTP/JWT tests, response contracts, dependency audit and portable packaging | [Core CI](https://github.com/msft-contoso-university/contoso-academics/actions/runs/44143517914) | Candidate `50757714b48a29198d9664aa7c2a2a8db4b9192c`; no live Entra |
 | Academics extended CodeQL scans C#, Python and Actions with no findings | [Candidate analysis](https://github.com/msft-contoso-university/contoso-academics/actions/runs/44144521998) | Read-only SARIF evidence; not native registered alerts or release approval |
@@ -23,6 +25,9 @@ role has been changed by this implementation.
 | Academics portable ZIP and both consumers | [Candidate CI](https://github.com/msft-contoso-university/contoso-academics/actions/runs/44157058530) | Compiler paths normalized; private-path guard retained |
 | Enrollments build-once native OCI candidate and Web consumer | [Candidate CI](https://github.com/msft-contoso-university/contoso-enrollments/actions/runs/44157059150) | Exact original OCI config/rootfs and all blob digests verified; no registry import |
 | Web explicit App Service HTTPS boundary | [Hosting candidate CI](https://github.com/msft-contoso-university/contoso-web/actions/runs/44158620659) | HTTP-backed OIDC challenge preserves HTTPS, ignores spoofed forwarding headers and rejects unknown hosts; no live Azure proof |
+| Four actual ASP.NET Core HTTP pipelines and three independent SQL databases pass the complete runtime journey and refusal cases | [Fresh runtime CI](https://github.com/msft-contoso-university/contoso-engineering/actions/runs/44184927026) | Head `dfa7b4b2ca49c344a707ec46defba5ac501beb66`, tested merge `50bb7bf7cf807a92244f2a108ea2aeced972b489`; downloaded TRX independently checked: seven passed, none skipped |
+| Personal Copilot inference configuration and genuine compiled locks reach main | [Merged configuration](https://github.com/msft-contoso-university/contoso-engineering/pull/11) | Post-merge [strict compile](https://github.com/msft-contoso-university/contoso-engineering/actions/runs/44180956832) passed; this does not validate the token or prove inference |
+| Real conversation-resolution protection blocks a setup merge despite green CI | [Students review](https://github.com/msft-contoso-university/contoso-students/pull/2#discussion_r4604089489) | Path handling was remediated with a focused regression; non-review protection was not waived |
 
 These are historical runs bound to their exact commits. A later source or
 workflow change needs its own current checks. PR CI may analyze a synthetic
@@ -30,23 +35,40 @@ merge commit rather than the contributor's head. Candidate artifacts are not
 reviewed releases; platform promotion must bind to the exact approved source,
 artifact identity and checksum.
 
-## Review surfaces
+## Source integration and review boundaries
 
-- [Web draft PR](https://github.com/msft-contoso-university/contoso-web/pull/2)
-- [Academics draft PR](https://github.com/msft-contoso-university/contoso-academics/pull/2)
-- [Enrollments draft PR](https://github.com/msft-contoso-university/contoso-enrollments/pull/2)
-- [Students draft PR](https://github.com/msft-contoso-university/contoso-students/pull/2)
-- [Shared compatibility gate draft PR](https://github.com/msft-contoso-university/contoso-engineering/pull/7)
+| Surface | Evidence |
+| --- | --- |
+| Merged guarded platform preflight | [Platform PR 1](https://github.com/msft-contoso-university/contoso-platform/pull/1) |
+| Merged Web implementation | [Web PR 2](https://github.com/msft-contoso-university/contoso-web/pull/2) |
+| Merged Academics implementation | [Academics PR 2](https://github.com/msft-contoso-university/contoso-academics/pull/2) |
+| Merged Enrollments implementation | [Enrollments PR 2](https://github.com/msft-contoso-university/contoso-enrollments/pull/2) |
+| Students implementation and review remediation | [Students PR 2](https://github.com/msft-contoso-university/contoso-students/pull/2) |
+| Merged shared compatibility controls | [Engineering PR 7](https://github.com/msft-contoso-university/contoso-engineering/pull/7) |
+| Merged real four-service runtime suite | [Engineering PR 9](https://github.com/msft-contoso-university/contoso-engineering/pull/9) |
+| Merged personal-Copilot configuration | [Engineering PR 11](https://github.com/msft-contoso-university/contoso-engineering/pull/11) |
 
 Enrollments' hosted candidate runs SQL, contract, audit and native OCI checks;
 use that PR's actual current checks for the exact run and commit. A candidate
 has not satisfied the intent gate merely because its technical checks pass.
-No application story has been accepted by an agent. Only a human writer can
-accept intent, and the latest push still requires independent human review.
-A PR author cannot provide their own required GitHub approval. The configured
-codeowner requirement only becomes effective once an actual CODEOWNERS policy
-exists on the trusted default branch; setting the flag alone does not establish
-an independent owner or close the first-bootstrap policy gap.
+Initial intent acceptance was explicitly maintainer-directed and transparently
+recorded as delegated execution; the label audit cannot prove who physically
+controlled the credential.
+
+The maintainer separately authorized a **temporary, initial-setup review-only
+exception**, not an independent approval. Each protected merge checked the exact
+head and successful required CI, saved the full policy, temporarily changed only
+approval count/codeowner/latest-push review selectors, then restored and compared
+the complete original policy before another merge. Strict app-qualified checks,
+admin enforcement and conversation resolution stayed active. Native rejection
+also restored protection. Inline findings were investigated and addressed or
+resolved with source-specific justification, not hidden by weakening that gate.
+
+Ordinary review protection is restored. A PR author cannot supply their own
+required GitHub approval. The codeowner flag only designates an owner where
+CODEOWNERS actually exists; platform still has no designated owner mapping.
+Source integration and this bootstrap exception do not approve artifacts,
+cloud deployment, identity grants or incident remediation.
 
 ## Intended delivery and runtime path
 
@@ -55,7 +77,7 @@ The Azure boxes and incident loop below are **planned, not deployed**.
 ```mermaid
 flowchart LR
   goal[Human goal and acceptance] --> issue[Structured issue]
-  issue -. authorization pending .-> agent[Agent implementation]
+  issue --> agent[Bounded proposed implementation]
   agent --> pr[Linked PR]
   pr --> gate[Tests / contracts / scanners]
   gate --> review[Independent human review]
@@ -93,11 +115,22 @@ sample. [The fix run](https://github.com/msft-contoso-university/contoso-student
 passes both original frozen consumers after requiring nondefault dates, emitting
 UTC-designated responses and adding the SQL constraint. Its regression tests also
 exercise dirty-data migration refusal: no stored date is silently fabricated.
-The separate PR run remains blocked on unaccepted human intent; green push CI is
-not review approval.
+That historical failure and repair remain separate from later maintainer-directed
+intent acceptance and the explicitly authorized source-bootstrap exception.
+Green push CI is not independent review or release approval.
 
-These are offline payload checks. Local stubs, contract fixtures and SQL Server
-containers are not evidence of private Azure connectivity or distributed traces.
+Those consumer checks validate offline payload compatibility. The separate runtime
+suite exercises actual Web forms, antiforgery/cookies, service authorization and
+database persistence through four in-process TestServer HTTP pipelines and three
+real SQL Server databases. Test-only issuer/credential adapters do not bypass the
+production authorization policies. It also checks reader/app-only/wrong-audience
+refusals, missing references and visible upstream failure without persistence.
+`Runtime integration gate` is now an app-qualified required check on engineering
+`main`, added only after that exact check passed on the actual merged main commit;
+the existing CI, strictness, review, admin and conversation controls were preserved.
+Its frozen source combination is not automatic full-stack validation of every
+later producer commit. Neither suite proves live Entra, private Azure connectivity,
+separate deployed processes or distributed Application Insights traces.
 Student deletion is also not legacy-equivalent: no cross-service cascading
 deletion or invented retention policy has been implemented.
 
@@ -123,12 +156,16 @@ external HTTP-to-HTTPS behavior and exclusive ingress remain release blockers.
 
 ## Open consequential gates
 
-1. Establish valid gh-aw inference authorization. The first provider request was
-   denied; no successful triage, automated review or cloud-agent goal-to-PR loop
-   is claimed. Inference workflows stay natively paused; do not substitute
-   credentials, accounts or providers to get around the denial.
-2. Obtain actual human story acceptance and independent review. Preserve native
-   branch protection, stale-review dismissal and last-push approval.
+1. Prove real gh-aw inference. Main now uses explicitly selected personal
+   `copilot-requests: none` bindings and an inherited organization Actions secret.
+   The [single personal pilot](https://github.com/msft-contoso-university/contoso-engineering/actions/runs/44172504634)
+   remains queued with zero jobs and inconsistent native cancellation responses.
+   Token validity, entitlement and successful inference are unverified. All three
+   inference workflows remain manually paused; no duplicate dispatch, unapproved
+   identity/provider change or paid-overage authorization is implied.
+2. Keep normal intent and independent-review controls enabled for the realistic
+   rehearsal. Initial source-bootstrap delegation was exceptional and recorded,
+   not a fabricated independent approval or permission to weaken release gates.
 3. Finish the platform composition, identity configuration and immutable
    promotion. SQL grants must verify the exact managed-identity client-ID SID
    and principal type, never accept an existing principal by display name alone.
@@ -142,6 +179,11 @@ external HTTP-to-HTTPS behavior and exclusive ingress remain release blockers.
 6. Exercise fresh creation, repeat update, partial-failure recovery, explicitly
    scoped teardown and recreation through the same platform-owned lifecycle.
    Keep GitHub evidence; verify SRE deletion rather than merely stopping it.
+7. Complete the original native automation import. The existing automation and
+   original application repository remain preserved; native Windows `gh aw add`
+   startup hangs and an authenticated source lookup encountered SAML enforcement.
+   No conversion, push or successful execution of that original automation is
+   claimed, and no authorization boundary was bypassed.
 
 ## Methodology and research boundary
 
