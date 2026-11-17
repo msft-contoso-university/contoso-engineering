@@ -17,6 +17,9 @@ Application CI can consume `.github/actions/story-gate` at a reviewed full
 commit SHA with an explicit read-only `github-token` input. Grant caller jobs
 `contents: read`, `issues: read`, and `pull-requests: read`; do not check out or
 execute untrusted PR code in a privileged context.
+Engineering's own PR story check loads policy from the trusted base commit,
+separate from candidate-code unit tests. `Required checks` rejects a skipped
+story check on PRs. Policy/workflow changes have explicit code ownership.
 
 ## Agentic workflows
 

@@ -9,6 +9,25 @@ permissions:
   contents: read
 
 jobs:
+  story:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - name: Require accepted intent using trusted base policy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CALLER_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python3 tools/governance.py check-pr --repository "$CALLER_REPOSITORY" --number "$PR_NUMBER"
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -21,3 +40,23 @@ jobs:
           python-version: '3.12'
       - name: Run selector and governance tests
         run: python -m unittest discover -s tests -v
+  required:
+    name: Required checks
+    if: always()
+    needs: [test, story]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Reject failures and unexpected skips
+        env:
+          TEST_RESULT: ${{ needs.test.result }}
+          STORY_RESULT: ${{ needs.story.result }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          test "$TEST_RESULT" = success
+          if [ "$EVENT_NAME" = pull_request ]; then
+            test "$STORY_RESULT" = success
+          else
+            test "$STORY_RESULT" = skipped
+          fi
