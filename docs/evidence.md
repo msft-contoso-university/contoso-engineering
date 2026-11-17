@@ -14,6 +14,9 @@ role has been changed by this implementation.
 | Academics SQL-backed HTTP/JWT tests, response contracts, dependency audit and portable packaging | [Core CI](https://github.com/msft-contoso-university/contoso-academics/actions/runs/44143517914) | Candidate `50757714b48a29198d9664aa7c2a2a8db4b9192c`; no live Entra |
 | Academics extended CodeQL scans C#, Python and Actions with no findings | [Candidate analysis](https://github.com/msft-contoso-university/contoso-academics/actions/runs/44144521998) | Read-only SARIF evidence; not native registered alerts or release approval |
 | Web portable build, consumer interactions, tests and dependency audit | [Core CI](https://github.com/msft-contoso-university/contoso-web/actions/runs/44143080591) | Candidate `38b43796784628ac72d8977b5097ec8d21f9f633`; APIs/identity not cloud-integrated |
+| Academics actual SQL HTTP responses pass both mapped consumers | [Cross-repo CI](https://github.com/msft-contoso-university/contoso-academics/actions/runs/44149549431) | Same-run artifacts; pinned Web and Enrollments parsing; no live service calls |
+| Enrollments actual SQL HTTP responses pass Web | [Cross-repo CI](https://github.com/msft-contoso-university/contoso-enrollments/actions/runs/44149555454) | Same-run artifacts; pinned consumer; no cloud integration claim |
+| Students compatibility defect blocks aggregate despite passing producer tests and CodeQL | [Negative real gate](https://github.com/msft-contoso-university/contoso-students/actions/runs/44149698073) | Default enrollment date rejected by Web; producer fix pending, not a harness bypass |
 
 These are historical runs bound to their exact commits. A later source or
 workflow change needs its own current checks. PR CI may analyze a synthetic
@@ -26,13 +29,18 @@ artifact identity and checksum.
 - [Web draft PR](https://github.com/msft-contoso-university/contoso-web/pull/2)
 - [Academics draft PR](https://github.com/msft-contoso-university/contoso-academics/pull/2)
 - [Enrollments draft PR](https://github.com/msft-contoso-university/contoso-enrollments/pull/2)
+- [Students draft PR](https://github.com/msft-contoso-university/contoso-students/pull/2)
+- [Shared compatibility gate draft PR](https://github.com/msft-contoso-university/contoso-engineering/pull/7)
 
 The Enrollments worker reports SQL, contract, audit and Docker checks passed;
 use that PR's actual current checks for the exact run and commit. A candidate
 has not satisfied the intent gate merely because its technical checks pass.
 No application story has been accepted by an agent. Only a human writer can
-accept intent, and the latest push still requires independent codeowner review.
-A PR author cannot provide their own required GitHub approval.
+accept intent, and the latest push still requires independent human review.
+A PR author cannot provide their own required GitHub approval. The configured
+codeowner requirement only becomes effective once an actual CODEOWNERS policy
+exists on the trusted default branch; setting the flag alone does not establish
+an independent owner or close the first-bootstrap policy gap.
 
 ## Intended delivery and runtime path
 
@@ -64,10 +72,23 @@ flowchart LR
   approval -. verified recovery / regression story .-> issue
 ```
 
-Producer/consumer mappings currently select affected checks; they do **not**
-yet demonstrate execution of changed-contract consumer gates across repositories.
-Local stubs, contract fixtures and SQL Server containers are not evidence of
-private Azure connectivity or distributed traces.
+Producer CI now executes the mapped consumer candidates using the producer's
+actual HTTP response artifacts from the same run, SHA and attempt. The shared
+workflow freezes consumer source pins, runs real parsing/mapping, and rejects
+missing or zero/skipped/failed TRX evidence. It has only contents/Actions read
+permissions and inherits no secrets.
+
+The first Students execution exposed a meaningful defect: an omitted enrollment
+date became `0001-01-01T00:00:00`, which the Web client correctly rejected even
+though producer unit tests and static analysis passed. The aggregate blocked the
+candidate. The supported fix is an explicit producer date invariant with a
+regression test, not removal of the consumer check or substitution of the bad
+sample. The green fix run must be linked before claiming this defect resolved.
+
+These are offline payload checks. Local stubs, contract fixtures and SQL Server
+containers are not evidence of private Azure connectivity or distributed traces.
+Student deletion is also not legacy-equivalent: no cross-service cascading
+deletion or invented retention policy has been implemented.
 
 ## Open consequential gates
 
