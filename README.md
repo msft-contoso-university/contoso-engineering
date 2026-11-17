@@ -65,11 +65,26 @@ python tools\contract_impact.py --repository contoso-students --changed-file con
 python -m unittest discover -s tests -v
 ```
 
-The selector only identifies required tests; it does not execute them or
-approve a change. Consumer test identifiers, contract paths and their CI
-integration must be implemented and verified in each application repository
-before this can serve as a release gate. Unknown contract files fail closed.
-Changes to this mapping require review by the relevant producer and consumers.
+The selector alone does not execute tests or approve a change.
+`tools/consumer_checks.py` plans all mapped consumers on every producer check,
+including implementation-only response changes. It rejects missing/unmapped
+contracts and mutable or absent consumer pins. `contracts/consumer-candidates.json`
+pins the current **unapproved candidates**, not production releases.
+
+The read-only reusable consumer workflow downloads actual HTTP JSON samples
+from the calling producer's exact run, SHA and attempt, then tests the pinned
+consumer's real parsing/mapping code. Tests reject breaking required fields,
+missing sample categories and malformed inputs; they do not merely validate old
+fixtures against a permissive new schema. The result gate requires nonzero
+passing TRX cases with no skipped/failed tests. This is offline payload
+compatibility, not proof of live Entra, private routing or distributed behavior.
+
+Call the reusable workflow at a full reviewed SHA after successful producer SQL
+tests have uploaded `producer-response-samples-<sha>-<attempt>`; include the
+caller's resulting job in its always-running aggregate. No inherited secrets,
+Azure access, repository writes, model requests or cross-repo dispatch token are
+needed. Candidate checks cannot authorize promotion. Changes to the mapping
+and consumer pins require producer/consumer review.
 
 ## Authority boundaries
 
