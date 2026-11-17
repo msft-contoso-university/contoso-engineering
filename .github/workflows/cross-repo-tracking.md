@@ -31,6 +31,8 @@ safe-outputs:
     deduplicate-by-title: true
     max: 1
 timeout-minutes: 10
+runs-on: ubuntu-24.04
+runs-on-slim: ubuntu-24.04
 concurrency:
   group: tracking-${{ github.event.inputs.source_repository }}-${{ github.event.inputs.issue_number }}
   cancel-in-progress: false

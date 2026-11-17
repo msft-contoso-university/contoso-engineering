@@ -17,6 +17,8 @@ safe-outputs:
     allowed-events: [COMMENT]
     max: 1
 timeout-minutes: 10
+runs-on: ubuntu-24.04
+runs-on-slim: ubuntu-24.04
 if: github.event.pull_request.head.repo.full_name == github.repository
 ---
 

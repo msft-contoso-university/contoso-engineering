@@ -24,6 +24,8 @@ safe-outputs:
     allowed: [needs-info, triaged]
     max: 1
 timeout-minutes: 10
+runs-on: ubuntu-24.04
+runs-on-slim: ubuntu-24.04
 ---
 
 # Advisory story triage
