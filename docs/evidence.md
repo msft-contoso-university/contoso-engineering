@@ -18,6 +18,11 @@ role has been changed by this implementation.
 | Enrollments actual SQL HTTP responses pass Web | [Cross-repo CI](https://github.com/msft-contoso-university/contoso-enrollments/actions/runs/44149555454) | Same-run artifacts; pinned consumer; no cloud integration claim |
 | Students compatibility defect blocks aggregate despite passing producer tests and CodeQL | [Negative real gate](https://github.com/msft-contoso-university/contoso-students/actions/runs/44149698073) | Default enrollment date rejected by Web; retained as genuine negative evidence |
 | Students producer invariant fixes the defect without changing frozen consumers | [Red-to-green CI](https://github.com/msft-contoso-university/contoso-students/actions/runs/44151844775) | Required dates, UTC responses, dirty-data migration refusal; original Web/Enrollments checks pass |
+| Students source-bound portable ZIP | [Candidate CI](https://github.com/msft-contoso-university/contoso-students/actions/runs/44153337497) | Matching manifest and per-file/archive hashes; not promotion approval |
+| Web source-bound portable ZIP | [Candidate CI](https://github.com/msft-contoso-university/contoso-web/actions/runs/44155173991) | Separate package/evidence artifacts; source/run/attempt-qualified upload |
+| Academics portable ZIP and both consumers | [Candidate CI](https://github.com/msft-contoso-university/contoso-academics/actions/runs/44157058530) | Compiler paths normalized; private-path guard retained |
+| Enrollments build-once native OCI candidate and Web consumer | [Candidate CI](https://github.com/msft-contoso-university/contoso-enrollments/actions/runs/44157059150) | Exact original OCI config/rootfs and all blob digests verified; no registry import |
+| Web explicit App Service HTTPS boundary | [Hosting candidate CI](https://github.com/msft-contoso-university/contoso-web/actions/runs/44158620659) | HTTP-backed OIDC challenge preserves HTTPS, ignores spoofed forwarding headers and rejects unknown hosts; no live Azure proof |
 
 These are historical runs bound to their exact commits. A later source or
 workflow change needs its own current checks. PR CI may analyze a synthetic
@@ -33,7 +38,7 @@ artifact identity and checksum.
 - [Students draft PR](https://github.com/msft-contoso-university/contoso-students/pull/2)
 - [Shared compatibility gate draft PR](https://github.com/msft-contoso-university/contoso-engineering/pull/7)
 
-The Enrollments worker reports SQL, contract, audit and Docker checks passed;
+Enrollments' hosted candidate runs SQL, contract, audit and native OCI checks;
 use that PR's actual current checks for the exact run and commit. A candidate
 has not satisfied the intent gate merely because its technical checks pass.
 No application story has been accepted by an agent. Only a human writer can
@@ -95,6 +100,26 @@ These are offline payload checks. Local stubs, contract fixtures and SQL Server
 containers are not evidence of private Azure connectivity or distributed traces.
 Student deletion is also not legacy-equivalent: no cross-service cascading
 deletion or invented retention policy has been implemented.
+
+The candidate packaging interface is now shared across the applications:
+`untrusted-candidate-<sha>-<run-id>-<attempt>`. App Service packages have a
+root-level portable ZIP, matching embedded/external `candidate.json` and
+`SHA256SUMS`; Enrollments has a native OCI archive, manifest, checksums and
+migration SQL. The first package checks rejected private compiler paths and
+Docker-to-OCI config rewriting. The fixes normalize compilation and build OCI
+natively rather than excluding evidence or accepting changed image identity.
+Artifact-reported hashes only establish consistency. Independent promotion
+authorization, trusted provenance, protected private transfer and registry import
+are separate, still-incomplete controls.
+
+Web has an explicit, fail-closed App Service TLS-termination contract:
+`Hosting__AppServiceHttpsOnly=true`, native site `httpsOnly: true`,
+`ASPNETCORE_FORWARDEDHEADERS_ENABLED=false` and one `AllowedHosts` value matching
+native `WEBSITE_HOSTNAME`. It normalizes the worker request scheme before
+HSTS/redirect/authentication without trusting `X-Forwarded-*` or arbitrary proxy
+networks. This is safe only when App Service is the sole worker ingress.
+Platform configuration now declares the same contract, but native readback,
+external HTTP-to-HTTPS behavior and exclusive ingress remain release blockers.
 
 ## Open consequential gates
 
