@@ -25,6 +25,13 @@ execute untrusted PR code in a privileged context.
 from Copilot implementation review. Neither can accept a story, approve a PR,
 dispatch a deployment, or merge.
 
+`cross-repo-tracking.md` is human-dispatched with an explicit component issue.
+It reads only the four allowlisted application repositories and creates at most
+one central reference, with a fixed source-identity title and handler-enforced
+title deduplication. No cross-repository write credential is needed because the
+only writer targets this central repo; component-side automatic forwarding and
+bidirectional updates still require a separately scoped GitHub App.
+
 The pinned Linux compiler in `compile-agentic.yml` generates locks and rejects
 uncommitted generated output. Bootstrap compilation may fail this final check
 until its real `agentic-locks` artifact is reviewed and committed; do not handwrite
