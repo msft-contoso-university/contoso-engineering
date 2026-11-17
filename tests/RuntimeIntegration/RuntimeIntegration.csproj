@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <PathMap>$(MSBuildThisFileDirectory)=/_/runtime/</PathMap>
+    <CandidateSourcesRoot Condition="'$(CandidateSourcesRoot)' == ''">$(MSBuildThisFileDirectory)..\..\..\services</CandidateSourcesRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.13" />
+    <PackageReference Include="MSTest" Version="4.0.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <ProjectReference Include="$(CandidateSourcesRoot)\contoso-web\src\Contoso.Web\Contoso.Web.csproj" Aliases="WebService" />
+    <ProjectReference Include="$(CandidateSourcesRoot)\contoso-students\src\Contoso.Students.Api\Contoso.Students.Api.csproj" Aliases="StudentsService" />
+    <ProjectReference Include="$(CandidateSourcesRoot)\contoso-academics\src\Contoso.Academics\Contoso.Academics.csproj" Aliases="AcademicsService" />
+    <ProjectReference Include="$(CandidateSourcesRoot)\contoso-enrollments\src\Contoso.Enrollments.Api\Contoso.Enrollments.Api.csproj" Aliases="EnrollmentsService" />
+  </ItemGroup>
+</Project>

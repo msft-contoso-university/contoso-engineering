@@ -1,3 +1,7 @@
 __pycache__/
 *.py[cod]
+**/bin/
+**/obj/
+**/TestResults/
+artifacts/
 .github/workflows/agentics-maintenance.yml
