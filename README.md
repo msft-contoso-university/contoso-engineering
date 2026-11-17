@@ -42,6 +42,12 @@ locks or weaken the check. Runtime inference uses `copilot-requests: write` and
 requires organization billing/entitlement. Compilation is not a successful AI
 run. Missing entitlement is pending setup, not an operational workflow.
 
+The compiler also emits optional `agentics-maintenance.yml`; this repository
+does not install that autonomous maintenance workflow. CI verifies every new
+or changed generated `*.lock.yml`, not unrelated compiler side files.
+The framework's native repository-role activation check restricts triage to
+trusted writers; public issue creation alone does not authorize inference.
+
 The [source baseline](docs/baseline.md) records initial static observations and
 explicitly identifies characterization work still required.
 
