@@ -75,3 +75,9 @@ approve their own pull requests, or deploy. GitHub Actions enforces
 deterministic checks, while humans authorize the consequential transitions.
 Application repositories own their data, REST contracts, and test execution.
 Public issues and evidence must contain only synthetic or redacted data.
+
+## Negative-case rehearsal
+
+A PR linked to incomplete or unaccepted intent must remain blocked even when
+its code tests and workflow compilation pass. This draft deliberately exercises
+that boundary; it is not an approved change to merge.
