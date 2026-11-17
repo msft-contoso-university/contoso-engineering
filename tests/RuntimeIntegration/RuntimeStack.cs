@@ -19,6 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
@@ -299,10 +300,16 @@ internal sealed class ServiceFactory<TProgram>(
     string source, Dictionary<string, string?> configuration, Action<IServiceCollection> configure)
     : WebApplicationFactory<TProgram> where TProgram : class
 {
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        // Minimal-host applications validate configuration before Build.
+        builder.ConfigureHostConfiguration(values => values.AddInMemoryCollection(configuration));
+        return base.CreateHost(builder);
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing").UseContentRoot(source);
-        builder.ConfigureAppConfiguration((_, values) => values.AddInMemoryCollection(configuration));
         builder.ConfigureTestServices(configure);
     }
 }
