@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "repositories": [
+    "contoso-web",
+    "contoso-students",
+    "contoso-academics",
+    "contoso-enrollments"
+  ],
+  "contracts": [
+    {
+      "producer": "contoso-students",
+      "path": "contracts/students.openapi.yaml",
+      "consumers": [
+        {"repository": "contoso-web", "test": "students-contract"},
+        {"repository": "contoso-enrollments", "test": "students-contract"}
+      ]
+    },
+    {
+      "producer": "contoso-academics",
+      "path": "contracts/academics.openapi.yaml",
+      "consumers": [
+        {"repository": "contoso-web", "test": "academics-contract"},
+        {"repository": "contoso-enrollments", "test": "academics-contract"}
+      ]
+    },
+    {
+      "producer": "contoso-enrollments",
+      "path": "contracts/enrollments.openapi.yaml",
+      "consumers": [
+        {"repository": "contoso-web", "test": "enrollments-contract"}
+      ]
+    }
+  ]
+}
