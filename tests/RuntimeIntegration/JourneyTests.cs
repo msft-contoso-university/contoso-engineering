@@ -74,9 +74,13 @@ public sealed class JourneyTests
     [TestMethod]
     public async Task AppOnlyIdentityCannotWriteDelegatedEnrollment()
     {
-        using var client = Stack.Client("Enrollments", appOnly: true);
-        using var response = await client.PostAsJsonAsync("/api/v1/enrollments/", new { studentId = 1, courseId = 1, grade = "A" });
-        Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        foreach (var role in new[] { "Students.Lookup", "Registrar" })
+        {
+            using var client = Stack.Client("Enrollments", role, appOnly: true);
+            using var response = await client.PostAsJsonAsync("/api/v1/enrollments/", new { studentId = 1, courseId = 1, grade = "A" });
+            Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode, $"App-only {role} must not write.");
+        }
+        Assert.IsFalse(Stack.Calls.Any(call => call.Identity == "app"));
         await AssertEmpty();
     }
 
