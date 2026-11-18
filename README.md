@@ -133,6 +133,18 @@ Azure access, repository writes, model requests or cross-repo dispatch token are
 needed. Candidate checks cannot authorize promotion. Changes to the mapping
 and consumer pins require producer/consumer review.
 
+## Whole-stack service PR integration
+
+The [runtime harness contract](tests/RuntimeIntegration/README.md#service-pull-requests)
+documents the read-only `runtime-service-pr.yml` reusable workflow. Each service
+supplies its identity and exact PR-head SHA; the other three `main` branches
+are resolved to full commits before restore/build/test and all four actual
+checkouts are verified. Complete, non-skipped runtime results and source/run/
+harness evidence are required. The existing frozen-candidate runtime workflow
+and consumer checks remain separate and unchanged. Service callers must pin a
+reviewed Engineering commit and require the runtime result alongside their
+existing gates; local validation alone is not hosted whole-stack proof.
+
 ## Authority boundaries
 
 Agents can advise and propose changes, not accept their own specifications,
