@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           repository: msft-contoso-university/contoso-engineering
-          ref: ${{ env.HARNESS_COMMIT }}
+          ref: 9aef1dd692ea3a4629aaaf949e65eb0afbb64e9a
           path: engineering
           persist-credentials: false
       - name: Bind exact PR head and resolve the other three main commits
@@ -71,7 +71,7 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           repository: msft-contoso-university/contoso-engineering
-          ref: ${{ env.HARNESS_COMMIT }}
+          ref: 9aef1dd692ea3a4629aaaf949e65eb0afbb64e9a
           path: engineering
           persist-credentials: false
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -169,7 +169,7 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           repository: msft-contoso-university/contoso-engineering
-          ref: ${{ env.HARNESS_COMMIT }}
+          ref: 9aef1dd692ea3a4629aaaf949e65eb0afbb64e9a
           path: engineering
           persist-credentials: false
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
