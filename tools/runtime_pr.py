@@ -70,8 +70,11 @@ def resolve(context_value, read=api):
 def validate_plan(value, expected):
     if not isinstance(value, dict) or set(value) != set(expected) | {"sources"}:
         raise ValueError("runtime source plan is incomplete or unrecognized")
-    if any(value[key] != item for key, item in expected.items()):
+    stable_context = {key: item for key, item in expected.items() if key != "runAttempt"}
+    if any(value[key] != item for key, item in stable_context.items()):
         raise ValueError("runtime source plan belongs to another PR, harness or run")
+    if not isinstance(value["runAttempt"], str) or not re.fullmatch(r"[1-9][0-9]*", value["runAttempt"]):
+        raise ValueError("runtime source plan has an invalid resolver attempt")
     refs = candidates({
         "version": 1, "status": "candidate-only-not-release", "services": value["sources"],
     })
@@ -85,12 +88,14 @@ def validate_plan(value, expected):
 def source_evidence(plan, expected, directory):
     refs = validate_plan(plan, expected)
     verify_sources(refs, directory)
-    return {**plan, "checkedOutSources": dict(refs)}
+    return {**plan, "runAttempt": expected["runAttempt"], "checkedOutSources": dict(refs)}
 
 
 def runtime_evidence(plan, expected, checked, directory):
     refs = validate_plan(plan, expected)
-    if checked != {**plan, "checkedOutSources": refs}:
+    if checked != {
+        **plan, "runAttempt": expected["runAttempt"], "checkedOutSources": refs,
+    }:
         raise ValueError("verified checkout evidence is missing or mismatched")
     result = verify_runtime(directory)
     return {

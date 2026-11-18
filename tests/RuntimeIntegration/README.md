@@ -93,18 +93,36 @@ Do not add a path filter or `continue-on-error` around the runtime call.
 The reusable aggregate also requires both source resolution and integration
 to succeed, including complete evidence validation and artifact upload.
 
+Candidate-controlled builds and tests run only in a disposable, unprivileged,
+capability-dropped .NET SDK container with no host workspace mount, Docker
+socket, GitHub token or runner control files. Its pinned Linux SDK image is
+identified by digest. Engineering harness, policy, tests and all four candidate
+source trees are copied read-only; MSBuild outputs and NuGet packages go to
+ephemeral writable paths inside the container. Test outputs are copied back;
+pre-build source evidence is captured on the runner before candidate execution.
+A separate fresh job checks out the pinned harness and validates
+the downloaded evidence, required TRX cases, and exact immutable source plan;
+the candidate build cannot edit that verifier or the final artifact gate.
+
 The seven-day `runtime-pr-<service>-<sha>-<run>-<attempt>` artifact contains
 TRX, pre-build `source-evidence.json`, and, only after complete passing tests,
-`runtime-evidence.json`. The JSON binds run ID/attempt, PR number/head SHA,
-all four immutable source SHAs, verified checkouts, and actual harness commit;
-the final report includes nonzero passing totals and each required case result.
-Source evidence is retained if a later build/test fails, but is not itself a
-successful runtime result. Evidence contains only source identities and
-synthetic test results, never credentials. Checkout credentials are not
+`runtime-evidence.json`. The JSON binds run ID and current execution attempt,
+PR number/head SHA, all four immutable source SHAs, verified checkouts, and
+actual harness commit; the final report includes nonzero passing totals and each
+required case result. The reusable workflow aggregate requires source
+resolution, container execution, independent verification, and evidence upload
+to succeed. Source evidence is retained if a later build/test fails, but is not
+itself a successful runtime result. Evidence contains only source identities
+and synthetic test results, never credentials. Checkout credentials are not
 persisted, the token is exposed only to the source-resolution API step, and
 runtime jobs have no Azure, write or inference permissions. Standard
 `GITHUB_TOKEN` cannot read other private repositories: inaccessible peers fail
 visibly rather than requesting a broader token or inheriting secrets.
+
+GitHub failed-job reruns reuse the original resolution plan within the same
+workflow run while incrementing the current run attempt. Stable source, PR, run
+and harness identities must still match; new evidence and the artifact name
+record the actual execution attempt.
 
 Engineering-only unit tests and workflow lint do not complete the cross-repo
 story. After this reusable workflow is reviewed and merged, each service must

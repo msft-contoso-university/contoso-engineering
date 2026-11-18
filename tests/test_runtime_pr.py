@@ -82,11 +82,29 @@ class RuntimePrTests(unittest.TestCase):
             elif mutation == "candidate":
                 plan["sources"]["web"] = "e" * 40
             elif mutation == "run":
-                plan["runAttempt"] = "1"
+                plan["runId"] = "5678"
             else:
                 plan["harnessCommit"] = "e" * 40
             with self.subTest(mutation=mutation), self.assertRaises(ValueError):
                 runtime_pr.validate_plan(plan, expected)
+
+    def test_integration_rerun_reuses_source_plan_but_records_current_attempt(self):
+        original_context = self.context()
+        plan = runtime_pr.resolve(original_context, self.reader)
+        retry_context = self.context(attempt="3")
+        runtime_pr.validate_plan(plan, retry_context)
+        with patch.object(runtime_pr, "verify_sources"):
+            evidence = runtime_pr.source_evidence(plan, retry_context, Path("services"))
+        self.assertEqual("2", plan["runAttempt"])
+        self.assertEqual("3", evidence["runAttempt"])
+        with patch.object(runtime_pr, "verify_runtime", return_value={"reports": 1, "testsPassed": 7}):
+            report = runtime_pr.runtime_evidence(plan, retry_context, evidence, Path("results"))
+        self.assertEqual("3", report["runAttempt"])
+        for key in ("runId", "candidateSha", "harnessCommit", "sources"):
+            self.assertEqual(plan[key], report[key])
+        changed_run = self.context(run_id="5678", attempt="3")
+        with self.assertRaisesRegex(ValueError, "another PR"):
+            runtime_pr.validate_plan(plan, changed_run)
 
     def test_verified_sources_and_runtime_evidence_are_bound_to_plan(self):
         expected = self.context()

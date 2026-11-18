@@ -66,11 +66,7 @@ jobs:
           --health-interval 10s --health-timeout 5s --health-retries 20
     env:
       RUNTIME_PLAN: ${{ needs.resolve.outputs.plan }}
-      CONTOSO_RUNTIME_SOURCES: ${{ github.workspace }}/services
-      CONTOSO_RUNTIME_SQL_CONNECTION: Server=127.0.0.1,1433;User ID=sa;Password=Runtime_CI_Only_Pass123!;Encrypt=False
-    defaults:
-      run:
-        working-directory: engineering
+      CONTAINER_IMAGE: mcr.microsoft.com/dotnet/sdk@sha256:ddbaedfc8b774389d91a511af08b77296f2c7a8d15d86f6214d2a87166933625
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
@@ -102,39 +98,101 @@ jobs:
           ref: ${{ needs.resolve.outputs.enrollments }}
           path: services/contoso-enrollments
           persist-credentials: false
-      - name: Verify all clean immutable checkouts and preserve source evidence
+      - name: Verify exact immutable sources and preserve trusted pre-build evidence
         run: >-
-          python3 tools/runtime_pr.py sources
-          --directory "$CONTOSO_RUNTIME_SOURCES" --evidence artifacts/runtime
-      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
+          python3 engineering/tools/runtime_pr.py sources
+          --directory "$GITHUB_WORKSPACE/services"
+          --evidence "$RUNNER_TEMP/runtime-pr-evidence"
+      - name: Guard policy tests before candidate code execution
+        run: python3 -m unittest discover -s engineering/tests -v
+      - name: Run candidate build in a disposable unprivileged container
+        env:
+          CONTOSO_RUNTIME_SQL_CONNECTION: Server=127.0.0.1,1433;User ID=sa;Password=Runtime_CI_Only_Pass123!;Encrypt=False
+        run: |
+          set -euo pipefail
+          mkdir -p engineering/artifacts/runtime
+          docker create --name runtime-pr --network host --cap-drop=ALL \
+            --security-opt=no-new-privileges --entrypoint /bin/sleep \
+            "$CONTAINER_IMAGE" infinity
+          docker start runtime-pr
+          docker exec --user 0 runtime-pr mkdir -p \
+            /work/engineering /work/services /work/artifacts/runtime \
+            /tmp/runtime/home /tmp/runtime/obj /tmp/runtime/bin
+          docker cp engineering/. runtime-pr:/work/engineering/
+          for service in web students academics enrollments; do
+            docker cp "services/contoso-$service" runtime-pr:/work/services/
+          done
+          docker exec --user 0 runtime-pr chown -R root:root /work/engineering
+          docker exec --user 0 runtime-pr chmod -R a-w /work/engineering
+          docker exec --user 0 runtime-pr chown -R root:root /work/services
+          docker exec --user 0 runtime-pr chmod -R a-w /work/services
+          docker exec --user 0 runtime-pr chown -R 10001:10001 /work/artifacts /tmp/runtime
+          printf '%s\n' '<Project>' '  <PropertyGroup>' \
+            '    <BaseIntermediateOutputPath>/tmp/runtime/obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>' \
+            '    <MSBuildProjectExtensionsPath>/tmp/runtime/obj/$(MSBuildProjectName)/</MSBuildProjectExtensionsPath>' \
+            '    <BaseOutputPath>/tmp/runtime/bin/$(MSBuildProjectName)/</BaseOutputPath>' \
+            '  </PropertyGroup>' '</Project>' |
+            docker exec --user 0 -i runtime-pr sh -c 'cat > /tmp/runtime/Directory.Build.props && chmod 444 /tmp/runtime/Directory.Build.props'
+          docker exec --user 0 runtime-pr chown root:root /tmp/runtime/Directory.Build.props
+          docker exec --user 0 runtime-pr chmod 444 /tmp/runtime/Directory.Build.props
+          status=0
+          docker exec --user 10001:10001 --workdir /work/engineering \
+            -e CONTOSO_RUNTIME_SQL_CONNECTION \
+            -e HOME=/tmp/runtime/home \
+            -e DOTNET_CLI_HOME=/tmp/runtime/home -e DOTNET_NOLOGO=true \
+            -e DOTNET_CLI_TELEMETRY_OPTOUT=true -e NUGET_PACKAGES=/tmp/runtime/home/.nuget/packages \
+            runtime-pr bash -euo pipefail -c '
+              dotnet restore tests/RuntimeIntegration/RuntimeIntegration.csproj --locked-mode -p:DirectoryBuildPropsPath=/tmp/runtime/Directory.Build.props
+              dotnet build tests/RuntimeIntegration/RuntimeIntegration.csproj -c Release --no-restore -p:DirectoryBuildPropsPath=/tmp/runtime/Directory.Build.props
+              dotnet test tests/RuntimeIntegration/RuntimeIntegration.csproj -c Release --no-build --no-restore --logger trx --results-directory /work/artifacts/runtime -p:DirectoryBuildPropsPath=/tmp/runtime/Directory.Build.props
+            ' || status=$?
+          docker cp runtime-pr:/work/artifacts/runtime/. engineering/artifacts/runtime/ || status=$?
+          cp "$RUNNER_TEMP/runtime-pr-evidence/source-evidence.json" engineering/artifacts/runtime/
+          docker rm -f runtime-pr
+          exit "$status"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
         with:
-          dotnet-version: '10.0.404'
-      - name: Guard policy tests
-        run: python3 -m unittest discover -s tests -v
-      - name: Locked audited restore
-        run: dotnet restore tests/RuntimeIntegration/RuntimeIntegration.csproj --locked-mode
-      - name: Build actual service applications and external harness
-        run: dotnet build tests/RuntimeIntegration/RuntimeIntegration.csproj -c Release --no-restore
-      - name: Exercise actual HTTP pipelines and independent SQL databases
-        run: >-
-          dotnet test tests/RuntimeIntegration/RuntimeIntegration.csproj
-          -c Release --no-build --no-restore --logger trx --results-directory artifacts/runtime
-      - name: Reject missing skipped failed or incomplete evidence
+          name: runtime-pr-input-${{ inputs.service }}-${{ inputs.candidate-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: engineering/artifacts/runtime
+          if-no-files-found: error
+          retention-days: 7
+
+  verify:
+    needs: [resolve, integration]
+    if: always() && needs.resolve.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      RUNTIME_PLAN: ${{ needs.resolve.outputs.plan }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: msft-contoso-university/contoso-engineering
+          ref: ${{ env.HARNESS_COMMIT }}
+          path: engineering
+          persist-credentials: false
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: runtime-pr-input-${{ inputs.service }}-${{ inputs.candidate-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/runtime
+      - name: Validate exact source snapshot and complete runtime evidence outside candidate execution
+        working-directory: engineering
         run: >-
           python3 tools/runtime_pr.py results
-          --directory artifacts/runtime --evidence artifacts/runtime
+          --directory ../artifacts/runtime --evidence ../artifacts/runtime
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: runtime-pr-${{ inputs.service }}-${{ inputs.candidate-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: engineering/artifacts/runtime
+          path: artifacts/runtime
           if-no-files-found: error
           retention-days: 7
 
   required:
     name: Service PR runtime gate
     if: always()
-    needs: [resolve, integration]
+    needs: [resolve, integration, verify]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
@@ -142,7 +200,9 @@ jobs:
         env:
           RESOLUTION: ${{ needs.resolve.result }}
           INTEGRATION: ${{ needs.integration.result }}
+          VERIFICATION: ${{ needs.verify.result }}
         run: |
           set -euo pipefail
           test "$RESOLUTION" = success
           test "$INTEGRATION" = success
+          test "$VERIFICATION" = success
